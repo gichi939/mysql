@@ -4,30 +4,30 @@ create table posts (
     title varchar(255),
     body text
 );
-drop table if exists comments;
-create table comments (
+drop table if exists logs;
+create table logs (
     id int unsigned primary key auto_increment,
-    post_id int unsigned not null,
-    body text
+    msg varchar(255)
 );
 
--- alter table comments add constraint fk_comments foreign key (post_id) references posts (id);
+drop trigger if exists posts_update_trigger;
+
+-- 区切りの文字列を変える(delimiter)
+delimiter //
+create trigger posts_update_trigger after update on posts for each row 
+begin
+insert into logs (msg) values ('post update!');
+insert into logs (msg) values (concat(old.title,'->', new.title));
+end;
+//
+delimiter ;
 
 insert into posts (title, body) values ('title1', 'body1');
 insert into posts (title, body) values ('title2', 'body2');
 insert into posts (title, body) values ('title3', 'body3');
 
-insert into comments (post_id, body) values (1, 'first comments for post1');
-insert into comments (post_id, body) values (1, 'second comments for post1');
-insert into comments (post_id, body) values (3, 'first comments for post3');
-insert into comments (post_id, body) values (4, 'first comments for post4');
-
-delete from posts where id = 2;
-insert into posts (title, body) values ('new title', 'new body');
-insert into comments (post_id, body) values (last_insert_id(), 'first comments for new post');
-
+update posts set title = 'title 2 update' where id = 2;
 select * from posts;
-select * from comments;
+select * from logs;
 
--- select * from posts left join comments on posts.id = comments.post_id;
--- select * from posts right join comments on posts.id = comments.post_id;
+-- show triggers \G
